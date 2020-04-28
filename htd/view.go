@@ -10,8 +10,8 @@ import (
 )
 
 type declaration struct {
-	date string
-	morningData string
+	date          string
+	morningData   string
 	afternoonData string
 }
 
@@ -73,9 +73,10 @@ func getDeclarations(table *goquery.Selection) []declaration {
 
 func parseRow(row *goquery.Selection) declaration {
 	cells := row.Find("td")
-	date := strings.TrimSpace(cells.Eq(1).Text())
-	morningData := parseCell(cells.Eq(2))
-	afternoonData := parseCell(cells.Eq(3))
+	// date := cells.Eq(1).Text()
+	date := parseDate(cells.Eq(1))
+	morningData := parseData(cells.Eq(2))
+	afternoonData := parseData(cells.Eq(3))
 	return declaration{
 		date:          date,
 		morningData:   morningData,
@@ -83,7 +84,18 @@ func parseRow(row *goquery.Selection) declaration {
 	}
 }
 
-func parseCell(cell *goquery.Selection) string {
+func parseDate(cell *goquery.Selection) string {
+	raw := cell.Text()
+	components := strings.SplitN(raw, ",", 2)
+	if len(components) < 2 {
+		return raw
+	}
+	date := strings.TrimSpace(components[0])
+	dayOfWeek := strings.TrimSpace(components[1])
+	return date + ", " + dayOfWeek
+}
+
+func parseData(cell *goquery.Selection) string {
 	rawData := cell.Text()
 	components := strings.SplitN(rawData, ",", 2)
 	if len(components) <= 1 {
@@ -95,7 +107,14 @@ func parseCell(cell *goquery.Selection) string {
 }
 
 func printDeclarations(writer io.Writer, declarations []declaration) {
+	maxDateLength := 22 // 01/04/2020 , Wednesday
+	desiredSpacesAfterDate := 4
+	maxAmLength := 7 // 35.9 No
+	desiredSpacesAfterAm := 4
 	for _, declaration := range declarations {
-		fmt.Fprintf(writer, "%s\t%s\t%s\n", declaration.date, declaration.morningData, declaration.afternoonData)
+		spacesAfterDate := strings.Repeat(" ", maxDateLength+desiredSpacesAfterDate- len(declaration.date))
+		spacesAfterAm := strings.Repeat(" ", maxAmLength + desiredSpacesAfterAm - len(declaration.morningData))
+		fmt.Fprintf(writer, "%s%s%s%s%s\n", declaration.date, spacesAfterDate, declaration.morningData, spacesAfterAm, declaration.afternoonData)
+
 	}
 }
