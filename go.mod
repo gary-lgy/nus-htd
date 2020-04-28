@@ -1,3 +1,5 @@
-module github.com/gary-lgy/nus-daily-temperature
+module github.com/gary-lgy/nus-htd
 
 go 1.14
+
+require github.com/joho/godotenv v1.3.0
