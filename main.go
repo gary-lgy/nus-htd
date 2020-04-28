@@ -9,7 +9,8 @@ import (
 	"os"
 	"strings"
 	"time"
-	"github.com/joho/godotenv"
+
+	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 type FeverError struct {
@@ -25,26 +26,39 @@ const JSessionIdCookieName string = "JSESSIONID"
 const DateFormat string = "02/01/2006"
 
 func main() {
-	// TODO: parse CLI args for env file and temperature
-	// TODO :Separate into different files, including FeverError
-	// TODO: Tests
-	err := godotenv.Load()
-	exitIfError(err)
-	username := os.Getenv("HTD_USERNAME")
-	password := os.Getenv("HTD_PASSWORD")
-	fmt.Println(username)
-	fmt.Println(password)
-	return
+	const am string = "am"
+	const pm string = "pm"
+	app := kingpin.New("nus-htd", "A command-line tool to make your daily temperature declaration to NUS.")
+	username := app.Flag("username", "Your NUSNET ID. (default: $HTD_USERNAME.)").Envar("HTD_USERNAME").Short('u').String()
+	password := app.Flag("password", "Your NUSNET password. (default: $HTD_PASSWORD)").Envar("HTD_PASSWORD").Short('p').String()
+	morningOrAfternoon := app.Arg("am or pm",
+		"whether the declaration is for the morning or the afternoon").Required().Enum(am, pm)
+	temperature := app.Arg("temperature", "Your temperature").Required().Float32()
+	reportFever := app.Flag("report-fever", "Report the temperature even if your have a fever").Short('f').Bool()
+	kingpin.MustParse(app.Parse(os.Args[1:]))
 
-	//client := &http.Client{
-	//	CheckRedirect: func(req *http.Request, via []*http.Request) error {
-	//		return http.ErrUseLastResponse
-	//	},
-	//}
-	//htdUrl, err := getHtdUrl(client, username, password)
-	//checkError(err)
-	//err = reportTemperature(client, htdUrl, 36.0, false, false)
-	//checkError(err)
+	if username == nil || *username == "" {
+		app.FatalUsage("Please suppler a username or set the $HTD_USERNAME environment variable.")
+	}
+	if password == nil || *password == "" {
+		app.FatalUsage("Please suppler a password or set the $HTD_PASSWORD environment variable.")
+	}
+
+	isMorning := true
+	if *morningOrAfternoon != am {
+		isMorning = false
+	}
+
+	// TODO :Separate into different files, including FeverError
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+	htdUrl, err := getHtdUrl(client, *username, *password)
+	exitIfError(err)
+	err = reportTemperature(client, htdUrl, *temperature, isMorning, *reportFever)
+	exitIfError(err)
 }
 
 func exitIfError(err error) {
