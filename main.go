@@ -10,32 +10,38 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
-func main() {
-	const am string = "am"
-	const pm string = "pm"
+const am string = "am"
+const pm string = "pm"
 
+
+func main() {
 	app := kingpin.New("nus-htd",
-		"A command-line tool to make your daily temperature declaration to NUS.")
+		"A command-line tool for making and viewing your daily temperature declarations at NUS.")
 	username := app.Flag("username",
 		"Your NUSNET ID. (default: $HTD_USERNAME.)").Envar("HTD_USERNAME").Short('u').String()
 	password := app.Flag("password",
 		"Your NUSNET password. (default: $HTD_PASSWORD)").Envar("HTD_PASSWORD").Short('p').String()
-	morningOrAfternoon := app.Arg("am or pm",
-		"whether the declaration is for the morning or the afternoon").Required().Enum(am, pm)
-	temperature := app.Arg("temperature",
-		"Your temperature").Required().Float32()
-	hasSymptoms := app.Flag("has-symptoms",
-		"Whether you have cough, " +
-		"a runny nose or sore throat that you have recently just acquired and is/are " +
-		"not due to pre-existing conditions").Short('s').Bool()
-	reportAnomaly := app.Flag("report-anomaly",
-		"Continue to report even if your have a fever or cold symptoms.").Short('f').Bool()
 	debug := app.Flag("debug",
 		"print the received command line arguments and flag and immediately exit.").Bool()
-	kingpin.MustParse(app.Parse(os.Args[1:]))
+
+	report := app.Command("report", "Report your temperature.")
+	morningOrAfternoon := report.Arg("am or pm",
+		"whether the declaration is for the morning or the afternoon").Required().Enum(am, pm)
+	temperature := report.Arg("temperature",
+		"Your temperature").Required().Float32()
+	hasSymptoms := report.Flag("has-symptoms",
+		"Whether you have cough, "+
+			"a runny nose or sore throat that you have recently just acquired and is/are "+
+			"not due to pre-existing conditions").Short('s').Bool()
+	reportAnomaly := report.Flag("report-anomaly",
+		"Continue to report even if your have a fever or cold symptoms.").Short('f').Bool()
+
+	view := app.Command("view", "View your past declarations.")
+
+	command := kingpin.MustParse(app.Parse(os.Args[1:]))
 
 	if *debug {
-		debugPrint(username, password, morningOrAfternoon, temperature, hasSymptoms, reportAnomaly)
+		debugPrint(command, username, password, morningOrAfternoon, temperature, hasSymptoms, reportAnomaly)
 		os.Exit(2)
 	}
 
@@ -46,28 +52,53 @@ func main() {
 		app.FatalUsage("Please supply a password or set the $HTD_PASSWORD environment variable.")
 	}
 
-	isMorning := true
-	if *morningOrAfternoon != am {
-		isMorning = false
-	}
-
-	if *temperature < 35.0 {
-		printErrorMsgAndExit("Temperature too low. Check your thermometer.")
-	}
-	if *temperature >= 37.5 && !*reportAnomaly {
-		printErrorMsgAndExit("Your have a fever; not reporting. Pass -f to override.")
-	}
-
-	if *hasSymptoms && !*reportAnomaly {
-		printErrorMsgAndExit("Your have symptoms; not reporting. Pass -f to override.")
-	}
-
 	client := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		},
 	}
-	err := htd.ReportTemperature(client, *username, *password, time.Now(), isMorning, *temperature, *hasSymptoms)
+	switch command {
+	case report.FullCommand():
+		makeReport(client, *username, *password, *morningOrAfternoon, *temperature, *hasSymptoms, *reportAnomaly)
+	case view.FullCommand():
+		printPastDeclarations(client, *username, *password)
+	}
+
+}
+
+func makeReport(
+	client *http.Client,
+	username, password, amOrPm string,
+	temperature float32,
+	hasSymptoms,
+	reportAnomaly bool,
+) {
+	var isMorning bool
+	if amOrPm == am {
+		isMorning = true
+	} else if amOrPm == pm {
+		isMorning = false
+	} else {
+		printErrorMsgAndExit("Unexpected error")
+	}
+
+	if temperature < 35.0 {
+		printErrorMsgAndExit("Temperature too low. Check your thermometer.")
+	}
+	if temperature >= 37.5 && !reportAnomaly {
+		printErrorMsgAndExit("Your have a fever; not reporting. Pass -f to override.")
+	}
+
+	if hasSymptoms && !reportAnomaly {
+		printErrorMsgAndExit("Your have symptoms; not reporting. Pass -f to override.")
+	}
+
+	err := htd.ReportTemperature(client, username, password, time.Now(), isMorning, temperature, hasSymptoms)
+	exitIfError(err)
+}
+
+func printPastDeclarations(client *http.Client, username, password string) {
+	err := htd.WriteDeclarations(os.Stdout, client, username, password)
 	exitIfError(err)
 }
 
@@ -82,11 +113,3 @@ func printErrorMsgAndExit(msg string) {
 	os.Exit(1)
 }
 
-func debugPrint(username, password, morningOrAfternoon *string, temperature *float32, hasSymptoms, reportAnomaly *bool) {
-	fmt.Printf("Username: %s\n", *username)
-	fmt.Printf("Password: %s\n", *password)
-	fmt.Printf("morningOrAfternoon: %s\n", *morningOrAfternoon)
-	fmt.Printf("temperature: %.1f\n", *temperature)
-	fmt.Printf("hasSymptoms: %v\n", *hasSymptoms)
-	fmt.Printf("reportAnomaly: %v\n", *reportAnomaly)
-}
