@@ -4,7 +4,12 @@ import "fmt"
 
 const emptyPlaceholer string = "<empty>"
 
-func debugPrint(command string, username, password, morningOrAfternoon *string, temperature *float32, hasSymptoms, reportAnomaly *bool) {
+func debugPrint(
+	command string,
+	username, password, morningOrAfternoon *string,
+	temperature *float32,
+	hasSymptoms, reportAnomaly, viewAfterReporting *bool,
+) {
 	fmt.Printf("Command: %s\n", command)
 	fmt.Printf("Username: %s\n", getString(username))
 	fmt.Printf("Password: %s\n", getString(password))
@@ -12,6 +17,7 @@ func debugPrint(command string, username, password, morningOrAfternoon *string, 
 	fmt.Printf("temperature: %s\n", getFloat(temperature))
 	fmt.Printf("hasSymptoms: %s\n", getBool(hasSymptoms))
 	fmt.Printf("reportAnomaly: %s\n", getBool(reportAnomaly))
+	fmt.Printf("viewAfterReporting: %s\n", getBool(viewAfterReporting))
 }
 
 func getString(ptr *string) string {

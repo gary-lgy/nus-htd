@@ -11,8 +11,8 @@ import (
 )
 
 
-// Report your temperature and symptoms.
-func ReportTemperature(
+// Declare your temperature and symptoms.
+func Declare(
 	client *http.Client,
 	username string,
 	password string,

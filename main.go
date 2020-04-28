@@ -13,7 +13,6 @@ import (
 const am string = "am"
 const pm string = "pm"
 
-
 func main() {
 	app := kingpin.New("nus-htd",
 		"A command-line tool for making and viewing your daily temperature declarations at NUS.")
@@ -22,26 +21,28 @@ func main() {
 	password := app.Flag("password",
 		"Your NUSNET password. (default: $HTD_PASSWORD)").Envar("HTD_PASSWORD").Short('p').String()
 	debug := app.Flag("debug",
-		"print the received command line arguments and flag and immediately exit.").Bool()
+		"Print the received command line arguments and flag and immediately exit.").Bool()
 
-	report := app.Command("report", "Report your temperature.")
-	morningOrAfternoon := report.Arg("am or pm",
+	declare := app.Command("declare", "Declare your temperature.").Alias("d")
+	morningOrAfternoon := declare.Arg("am or pm",
 		"whether the declaration is for the morning or the afternoon").Required().Enum(am, pm)
-	temperature := report.Arg("temperature",
+	temperature := declare.Arg("temperature",
 		"Your temperature").Required().Float32()
-	hasSymptoms := report.Flag("has-symptoms",
+	hasSymptoms := declare.Flag("has-symptoms",
 		"Whether you have cough, "+
 			"a runny nose or sore throat that you have recently just acquired and is/are "+
 			"not due to pre-existing conditions").Short('s').Bool()
-	reportAnomaly := report.Flag("report-anomaly",
-		"Continue to report even if your have a fever or cold symptoms.").Short('f').Bool()
+	declareAnomaly := declare.Flag("declare-anomaly",
+		"Continue to declare even if your have a fever or cold symptoms.").Short('f').Bool()
+	viewAfterDeclare := declare.Flag("view-after-declare",
+		"View past declarations after making a new declaration. (default: true)").Default("true").Bool()
 
-	view := app.Command("view", "View your past declarations.")
+	view := app.Command("view", "View your past declarations.").Alias("v")
 
 	command := kingpin.MustParse(app.Parse(os.Args[1:]))
 
 	if *debug {
-		debugPrint(command, username, password, morningOrAfternoon, temperature, hasSymptoms, reportAnomaly)
+		debugPrint(command, username, password, morningOrAfternoon, temperature, hasSymptoms, declareAnomaly, viewAfterDeclare)
 		os.Exit(2)
 	}
 
@@ -58,15 +59,17 @@ func main() {
 		},
 	}
 	switch command {
-	case report.FullCommand():
-		makeReport(client, *username, *password, *morningOrAfternoon, *temperature, *hasSymptoms, *reportAnomaly)
+	case declare.FullCommand():
+		makeDeclaration(client, *username, *password, *morningOrAfternoon, *temperature, *hasSymptoms, *declareAnomaly)
+		if *viewAfterDeclare {
+			printPastDeclarations(client, *username, *password)
+		}
 	case view.FullCommand():
 		printPastDeclarations(client, *username, *password)
 	}
-
 }
 
-func makeReport(
+func makeDeclaration(
 	client *http.Client,
 	username, password, amOrPm string,
 	temperature float32,
@@ -93,7 +96,7 @@ func makeReport(
 		printErrorMsgAndExit("Your have symptoms; not reporting. Pass -f to override.")
 	}
 
-	err := htd.ReportTemperature(client, username, password, time.Now(), isMorning, temperature, hasSymptoms)
+	err := htd.Declare(client, username, password, time.Now(), isMorning, temperature, hasSymptoms)
 	exitIfError(err)
 }
 
@@ -112,4 +115,3 @@ func printErrorMsgAndExit(msg string) {
 	fmt.Fprintf(os.Stderr, "Error: %s\n", msg)
 	os.Exit(1)
 }
-
