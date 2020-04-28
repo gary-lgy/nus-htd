@@ -30,11 +30,11 @@ func main() {
 		"not due to pre-existing conditions").Short('s').Bool()
 	reportAnomaly := app.Flag("report-anomaly",
 		"Continue to report even if your have a fever or cold symptoms.").Short('f').Bool()
-	debugFlags := app.Flag("debug",
+	debug := app.Flag("debug",
 		"print the received command line arguments and flag and immediately exit.").Bool()
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
-	if *debugFlags {
+	if *debug {
 		debugPrint(username, password, morningOrAfternoon, temperature, hasSymptoms, reportAnomaly)
 		os.Exit(2)
 	}
