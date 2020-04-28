@@ -3,7 +3,9 @@ package htd
 import (
 	"fmt"
 	"io"
+	"log"
 	"net/http"
+	"net/http/httputil"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -42,7 +44,6 @@ func getTable(client *http.Client, username, password string) (*goquery.Selectio
 		return nil, err
 	}
 	req.AddCookie(sessionCookie)
-	logOutgoingRequest(req, "")
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -51,9 +52,11 @@ func getTable(client *http.Client, username, password string) (*goquery.Selectio
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		logResponse(resp, "Unexpected response from %s: \n")
+		dump, _ := httputil.DumpResponse(resp, false)
+		log.Printf("Failed to get past declarations.\nReceived unexpected response: %q\n", dump)
 		return nil, fmt.Errorf("failed to get past declarations")
 	}
+	log.Println("Successfully retrieved past declarations.")
 
 	doc, err := goquery.NewDocumentFromReader(resp.Body)
 	if err != nil {
@@ -112,8 +115,8 @@ func printDeclarations(writer io.Writer, declarations []declaration) {
 	maxAmLength := 7 // 35.9 No
 	desiredSpacesAfterAm := 4
 	for _, declaration := range declarations {
-		spacesAfterDate := strings.Repeat(" ", maxDateLength+desiredSpacesAfterDate- len(declaration.date))
-		spacesAfterAm := strings.Repeat(" ", maxAmLength + desiredSpacesAfterAm - len(declaration.morningData))
+		spacesAfterDate := strings.Repeat(" ", maxDateLength+desiredSpacesAfterDate-len(declaration.date))
+		spacesAfterAm := strings.Repeat(" ", maxAmLength+desiredSpacesAfterAm-len(declaration.morningData))
 		fmt.Fprintf(writer, "%s%s%s%s%s\n", declaration.date, spacesAfterDate, declaration.morningData, spacesAfterAm, declaration.afternoonData)
 
 	}
