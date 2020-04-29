@@ -41,7 +41,7 @@ nus-htd v[iew]
 # Why
 1. To explore Golang's HTTP client
 2. To write a small CLI tool in Golang
-3. To save a few seconds of clicking when reporting my temperatures
+3. To save a few seconds of clicking when declaring my temperatures
 
 # Credits
 - [nus-htd-automation](https://github.com/jiachen247/nus-htd-automation) for reverse-engineering the authentication flow

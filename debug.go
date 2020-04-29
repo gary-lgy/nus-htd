@@ -8,7 +8,7 @@ func debugPrint(
 	command string,
 	username, password, morningOrAfternoon *string,
 	temperature *float32,
-	hasSymptoms, reportAnomaly, viewAfterReporting *bool,
+	hasSymptoms, declareAnomaly, viewAfterReporting *bool,
 ) {
 	fmt.Printf("Command: %s\n", command)
 	fmt.Printf("Username: %s\n", getString(username))
@@ -16,7 +16,7 @@ func debugPrint(
 	fmt.Printf("morningOrAfternoon: %s\n", getString(morningOrAfternoon))
 	fmt.Printf("temperature: %s\n", getFloat(temperature))
 	fmt.Printf("hasSymptoms: %s\n", getBool(hasSymptoms))
-	fmt.Printf("reportAnomaly: %s\n", getBool(reportAnomaly))
+	fmt.Printf("declareAnomaly: %s\n", getBool(declareAnomaly))
 	fmt.Printf("viewAfterReporting: %s\n", getBool(viewAfterReporting))
 }
 

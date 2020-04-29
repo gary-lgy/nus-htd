@@ -67,7 +67,7 @@ func makeDeclaration(
 	username, password, amOrPm string,
 	temperature float32,
 	hasSymptoms,
-	reportAnomaly bool,
+	declareAnomaly bool,
 ) {
 	var isMorning bool
 	if amOrPm == am {
@@ -81,12 +81,12 @@ func makeDeclaration(
 	if temperature < 35.0 {
 		printErrorMsgAndExit("Temperature too low. Check your thermometer.")
 	}
-	if temperature >= 37.5 && !reportAnomaly {
-		printErrorMsgAndExit("Your have a fever; not reporting. Pass -f to override.")
+	if temperature >= 37.5 && !declareAnomaly {
+		printErrorMsgAndExit("Your have a fever; not declaring. Pass -f to override.")
 	}
 
-	if hasSymptoms && !reportAnomaly {
-		printErrorMsgAndExit("Your have symptoms; not reporting. Pass -f to override.")
+	if hasSymptoms && !declareAnomaly {
+		printErrorMsgAndExit("Your have symptoms; not declaring. Pass -f to override.")
 	}
 
 	err := htd.Declare(username, password, time.Now(), isMorning, temperature, hasSymptoms)
