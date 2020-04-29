@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"net/http"
 	"os"
 	"time"
 
@@ -53,24 +52,18 @@ func main() {
 		app.FatalUsage("Please supply a password or set the $HTD_PASSWORD environment variable.")
 	}
 
-	client := &http.Client{
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
-	}
 	switch command {
 	case declare.FullCommand():
-		makeDeclaration(client, *username, *password, *morningOrAfternoon, *temperature, *hasSymptoms, *declareAnomaly)
+		makeDeclaration(*username, *password, *morningOrAfternoon, *temperature, *hasSymptoms, *declareAnomaly)
 		if *viewAfterDeclare {
-			printPastDeclarations(client, *username, *password)
+			printPastDeclarations(*username, *password)
 		}
 	case view.FullCommand():
-		printPastDeclarations(client, *username, *password)
+		printPastDeclarations(*username, *password)
 	}
 }
 
 func makeDeclaration(
-	client *http.Client,
 	username, password, amOrPm string,
 	temperature float32,
 	hasSymptoms,
@@ -96,12 +89,12 @@ func makeDeclaration(
 		printErrorMsgAndExit("Your have symptoms; not reporting. Pass -f to override.")
 	}
 
-	err := htd.Declare(client, username, password, time.Now(), isMorning, temperature, hasSymptoms)
+	err := htd.Declare(username, password, time.Now(), isMorning, temperature, hasSymptoms)
 	exitIfError(err)
 }
 
-func printPastDeclarations(client *http.Client, username, password string) {
-	err := htd.WriteDeclarations(os.Stdout, client, username, password)
+func printPastDeclarations(username, password string) {
+	err := htd.WriteDeclarations(os.Stdout, username, password)
 	exitIfError(err)
 }
 

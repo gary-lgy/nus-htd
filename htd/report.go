@@ -13,7 +13,6 @@ import (
 
 // Declare your temperature and symptoms.
 func Declare(
-	client *http.Client,
 	username string,
 	password string,
 	date time.Time,
@@ -21,6 +20,7 @@ func Declare(
 	temperature float32,
 	hasSymptoms bool,
 ) error {
+	client := makeNoRedirectHttpClient()
 	htdUrl, err := getHtdUrl(client, username, password)
 	if err != nil {
 		return err

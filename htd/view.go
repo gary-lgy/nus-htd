@@ -19,7 +19,8 @@ type declaration struct {
 
 const viewingUrl string = "https://myaces.nus.edu.sg/htd/htd?loadPage=viewtemperature"
 
-func WriteDeclarations(writer io.Writer, client *http.Client, username, password string) error {
+func WriteDeclarations(writer io.Writer, username, password string) error {
+	client := makeNoRedirectHttpClient()
 	table, err := getTable(client, username, password)
 	if err != nil {
 		return err
@@ -76,7 +77,6 @@ func getDeclarations(table *goquery.Selection) []declaration {
 
 func parseRow(row *goquery.Selection) declaration {
 	cells := row.Find("td")
-	// date := cells.Eq(1).Text()
 	date := parseDate(cells.Eq(1))
 	morningData := parseData(cells.Eq(2))
 	afternoonData := parseData(cells.Eq(3))

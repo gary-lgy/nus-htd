@@ -23,6 +23,15 @@ func getCookie(cookies []*http.Cookie, name string) *http.Cookie {
 	return nil
 }
 
+// Make an HTTP client that does not follow redirects
+func makeNoRedirectHttpClient() *http.Client {
+	return &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+}
+
 // Get the URL used for authentication
 func getVafsAuthUrl() (*url.URL, error) {
 	authUrl, err := url.Parse("https://vafs.nus.edu.sg/adfs/oauth2/authorize")
