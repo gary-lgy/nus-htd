@@ -121,4 +121,3 @@ func getJSessionId(client *http.Client, htdUrl *url.URL) (*http.Cookie, error) {
 	log.Printf("Obtained %s cookie from %s\n", jSessionIdCookieName, htdUrl.Hostname())
 	return sessionCookie, nil
 }
-

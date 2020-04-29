@@ -11,7 +11,6 @@ import (
 	"time"
 )
 
-
 // Declare your temperature and symptoms.
 func Declare(
 	client *http.Client,
