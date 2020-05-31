@@ -19,6 +19,7 @@ func Declare(
 	isMorning bool,
 	temperature float32,
 	hasSymptoms bool,
+	familyHasSymptoms bool,
 ) error {
 	client := makeNoRedirectHttpClient()
 	htdUrl, err := getHtdUrl(client, username, password)
@@ -40,13 +41,20 @@ func Declare(
 		symptomsFlag = "Y" // I've no idea what the real flag is
 	}
 
+	familySymptomsFlag := "N"
+	if familyHasSymptoms {
+		familySymptomsFlag = "Y"
+	}
+
 	formattedDate := date.Format(dateFormat)
 	formData := url.Values{
-		"actionName":    {"dlytemperature"},
-		"tempDeclOn":    {formattedDate},
-		"declFrequency": {declFrequency},
-		"temperature":   {fmt.Sprintf("%.1f", temperature)},
-		"symptomsFlag":  {symptomsFlag},
+		"actionName":         {"dlytemperature"},
+		"webdriverFlag":      {""},
+		"tempDeclOn":         {formattedDate},
+		"declFrequency":      {declFrequency},
+		"temperature":        {fmt.Sprintf("%.1f", temperature)},
+		"symptomsFlag":       {symptomsFlag},
+		"familySymptomsFlag": {familySymptomsFlag},
 	}
 	req, err := http.NewRequest(http.MethodPost, htdUrl.String(), strings.NewReader(formData.Encode()))
 	if err != nil {

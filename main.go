@@ -26,11 +26,11 @@ func main() {
 	temperature := declare.Arg("temperature",
 		"Your temperature").Required().Float32()
 	hasSymptoms := declare.Flag("has-symptoms",
-		"Whether you have cough, "+
-			"a runny nose or sore throat that you have recently just acquired and is/are "+
-			"not due to pre-existing conditions").Short('s').Bool()
+		"Whether you have COVID-19 symptoms").Bool()
+	familyHasSymptoms := declare.Flag("family-has-symptoms",
+		"Whether anyone in your family has COVID-19 symptoms").Bool()
 	declareAnomaly := declare.Flag("declare-anomaly",
-		"Continue to declare even if your have a fever or cold symptoms.").Short('f').Bool()
+		"Continue to declare even if you have a fever, or you or your family members have symptoms").Short('f').Bool()
 	viewAfterDeclare := declare.Flag("view-after-declare",
 		"View past declarations after making a new declaration. (default: true)").Default("true").Bool()
 
@@ -47,7 +47,7 @@ func main() {
 
 	switch command {
 	case declare.FullCommand():
-		makeDeclaration(*username, *password, *morningOrAfternoon, *temperature, *hasSymptoms, *declareAnomaly)
+		makeDeclaration(*username, *password, *morningOrAfternoon, *temperature, *hasSymptoms, *familyHasSymptoms, *declareAnomaly)
 		if *viewAfterDeclare {
 			printPastDeclarations(*username, *password)
 		}
@@ -60,6 +60,7 @@ func makeDeclaration(
 	username, password, amOrPm string,
 	temperature float32,
 	hasSymptoms,
+	familyHasSymptoms,
 	declareAnomaly bool,
 ) {
 	var isMorning bool
@@ -82,7 +83,11 @@ func makeDeclaration(
 		printErrorMsgAndExit("Your have symptoms; not declaring. Pass -f to override.")
 	}
 
-	err := htd.Declare(username, password, time.Now(), isMorning, temperature, hasSymptoms)
+	if familyHasSymptoms && !declareAnomaly {
+		printErrorMsgAndExit("Someone in your family has symptoms; not declaring. Pass -f to override.")
+	}
+
+	err := htd.Declare(username, password, time.Now(), isMorning, temperature, hasSymptoms, familyHasSymptoms)
 	exitIfError(err)
 }
 
