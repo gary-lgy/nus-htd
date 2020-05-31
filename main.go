@@ -19,8 +19,6 @@ func main() {
 		"Your NUSNET ID. (default: $HTD_USERNAME.)").Envar("HTD_USERNAME").Short('u').String()
 	password := app.Flag("password",
 		"Your NUSNET password. (default: $HTD_PASSWORD)").Envar("HTD_PASSWORD").Short('p').String()
-	debug := app.Flag("debug",
-		"Print the received command line arguments and flag and immediately exit.").Bool()
 
 	declare := app.Command("declare", "Declare your temperature.").Alias("d")
 	morningOrAfternoon := declare.Arg("am or pm",
@@ -39,11 +37,6 @@ func main() {
 	view := app.Command("view", "View your past declarations.").Alias("v")
 
 	command := kingpin.MustParse(app.Parse(os.Args[1:]))
-
-	if *debug {
-		debugPrint(command, username, password, morningOrAfternoon, temperature, hasSymptoms, declareAnomaly, viewAfterDeclare)
-		os.Exit(2)
-	}
 
 	if username == nil || *username == "" {
 		app.FatalUsage("Please supply a username or set the $HTD_USERNAME environment variable.")
