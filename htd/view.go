@@ -11,10 +11,26 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
-type declaration struct {
+type declarationData struct {
+	temperature          string
+	hasSymptoms          string
+	householdHasSymptoms string
+}
+
+func (d *declarationData) String() string {
+	// 36.7  No   No
+	return fmt.Sprintf("%-4s  %-3s  %-3s", d.temperature, d.hasSymptoms, d.householdHasSymptoms)
+}
+
+type dailyDeclaration struct {
 	date          string
-	morningData   string
-	afternoonData string
+	morningData   *declarationData
+	afternoonData *declarationData
+}
+
+func (d *dailyDeclaration) String() string {
+	// 01/03/2020, Wednesday  am...  pm...
+	return fmt.Sprintf("%-21s  %s  %s", d.date, d.morningData, d.afternoonData)
 }
 
 const viewingUrl string = "https://myaces.nus.edu.sg/htd/htd?loadPage=viewtemperature"
@@ -26,7 +42,9 @@ func WriteDeclarations(writer io.Writer, username, password string) error {
 		return err
 	}
 	declarations := getDeclarations(table)
-	printDeclarations(writer, declarations)
+	for _, decl := range declarations {
+		fmt.Fprintln(writer, decl)
+	}
 	return nil
 }
 
@@ -67,20 +85,22 @@ func getTable(client *http.Client, username, password string) (*goquery.Selectio
 	return doc.Find("#myTable").First(), nil
 }
 
-func getDeclarations(table *goquery.Selection) []declaration {
-	declarations := make([]declaration, 0)
-	table.Find("tr").Each(func(i int, row *goquery.Selection) {
-		declarations = append(declarations, parseRow(row))
+// TODO: handle errors
+func getDeclarations(table *goquery.Selection) []*dailyDeclaration {
+	declarations := make([]*dailyDeclaration, 0)
+	tbody := table.Find("tbody")
+	tbody.Find("tr").Each(func(i int, row *goquery.Selection) {
+		declarations = append(declarations, parseDailyDeclaration(row))
 	})
 	return declarations
 }
 
-func parseRow(row *goquery.Selection) declaration {
+func parseDailyDeclaration(row *goquery.Selection) *dailyDeclaration {
 	cells := row.Find("td")
 	date := parseDate(cells.Eq(1))
-	morningData := parseData(cells.Eq(2))
-	afternoonData := parseData(cells.Eq(3))
-	return declaration{
+	morningData := parseDeclarationData(cells.Slice(2, 5))
+	afternoonData := parseDeclarationData(cells.Slice(5, 8))
+	return &dailyDeclaration{
 		date:          date,
 		morningData:   morningData,
 		afternoonData: afternoonData,
@@ -98,26 +118,14 @@ func parseDate(cell *goquery.Selection) string {
 	return date + ", " + dayOfWeek
 }
 
-func parseData(cell *goquery.Selection) string {
-	rawData := cell.Text()
-	components := strings.SplitN(rawData, ",", 2)
-	if len(components) <= 1 {
-		return ""
-	}
-	temperature := strings.TrimSpace(components[0])
-	symptoms := strings.TrimSpace(components[1])
-	return temperature + " " + symptoms
-}
+func parseDeclarationData(cells *goquery.Selection) *declarationData {
+	temperatureText := strings.TrimSpace(cells.Eq(0).Text())
+	symptomsText := strings.TrimSpace(cells.Eq(1).Text())
+	householdSymptomsText := strings.TrimSpace(cells.Eq(2).Text())
 
-func printDeclarations(writer io.Writer, declarations []declaration) {
-	maxDateLength := 22 // 01/04/2020 , Wednesday
-	desiredSpacesAfterDate := 4
-	maxAmLength := 7 // 35.9 No
-	desiredSpacesAfterAm := 4
-	for _, declaration := range declarations {
-		spacesAfterDate := strings.Repeat(" ", maxDateLength+desiredSpacesAfterDate-len(declaration.date))
-		spacesAfterAm := strings.Repeat(" ", maxAmLength+desiredSpacesAfterAm-len(declaration.morningData))
-		fmt.Fprintf(writer, "%s%s%s%s%s\n", declaration.date, spacesAfterDate, declaration.morningData, spacesAfterAm, declaration.afternoonData)
-
+	return &declarationData{
+		temperature:          temperatureText,
+		hasSymptoms:          symptomsText,
+		householdHasSymptoms: householdSymptomsText,
 	}
 }
