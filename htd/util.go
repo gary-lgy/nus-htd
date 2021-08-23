@@ -77,7 +77,7 @@ func getMsisAuthCookie(client *http.Client, authUrl *url.URL, username, password
 	return cookie, nil
 }
 
-// Get the URL used for daily temperature declaration.
+// Get the URL used for health declaration.
 // The auth portal will redirect to this URL after authentication. It contains a unique ID.
 func getHtdUrl(client *http.Client, username, password string) (*url.URL, error) {
 	// Get the auth cookie from the auth portal
@@ -105,12 +105,12 @@ func getHtdUrl(client *http.Client, username, password string) (*url.URL, error)
 
 	htdUrl, err := resp.Location()
 	if err == nil {
-		log.Printf("Obtained unique temperature declaration URL %s\n", htdUrl.Hostname())
+		log.Printf("Obtained unique health declaration URL %s\n", htdUrl.Hostname())
 	}
 	return htdUrl, err
 }
 
-// This cookie is used on the daily temperature declaration site.
+// This cookie is used on the daily health declaration site.
 func getJSessionId(client *http.Client, htdUrl *url.URL) (*http.Cookie, error) {
 	req, err := http.NewRequest(http.MethodGet, htdUrl.String(), nil)
 	if err != nil {

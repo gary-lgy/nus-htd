@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-// Declare your temperature and symptoms.
+// Declare your health status
 func Declare(
 	username string,
 	password string,
@@ -67,8 +67,8 @@ func Declare(
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		dump, _ := httputil.DumpResponse(resp, false)
-		log.Printf("Temperature declaration failed.\nReceived %q\n", dump)
-		return errors.New("failed to submit temperature")
+		log.Printf("Health declaration failed.\nReceived %q\n", dump)
+		return errors.New("failed to submit health declaration")
 	}
 	log.Printf("Successfully made a new declaration for %s %s.\nSymptoms: %s\nHousehold symptoms: %s\n",
 		declFrequency, formattedDate, symptomsFlag, familySymptomsFlag)

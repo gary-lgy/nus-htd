@@ -1,5 +1,6 @@
 # NUS-HTD
-A command-line tool to make and view your temperature declarations at National University of Singapore (NUS).
+A command-line tool to make and view your daily health declarations at National University of
+Singapore (NUS).
 
 # How to build
 Clone the reposiotry and run:
@@ -16,7 +17,7 @@ NUSNET ID and password can be supplied using either command-line arguments or fr
 ```
 usage: nus-htd [<flags>] <command> [<args> ...]
 
-A command-line tool for making and viewing your daily temperature declarations at NUS.
+A command-line tool for making and viewing your daily health declarations at NUS.
 
 Flags:
       --help               Show context-sensitive help (also try --help-long and --help-man).
@@ -28,8 +29,8 @@ Commands:
   help [<command>...]
     Show help.
 
-  declare [<flags>] <am or pm> <temperature>
-    Declare your temperature. (d for short)
+  declare [<flags>] <am or pm>
+    Declare your health status. (d for short)
 
   view
     View your past declarations. (v for short)
@@ -50,7 +51,7 @@ nus-htd v[iew]
 # Why did I write this
 1. To explore Golang's HTTP client
 2. To write a small CLI tool in Golang
-3. To save a few clicks when declaring my temperatures
+3. To save a few clicks when declaring my health status
 
 # Credits
 - [nus-htd-automation](https://github.com/jiachen247/nus-htd-automation) for reverse-engineering the authentication flow

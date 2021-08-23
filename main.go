@@ -14,13 +14,13 @@ const pm string = "pm"
 
 func main() {
 	app := kingpin.New("nus-htd",
-		"A command-line tool for making and viewing your daily temperature declarations at NUS.")
+		"A command-line tool for making and viewing your daily health declarations at NUS.")
 	username := app.Flag("username",
 		"Your NUSNET ID. (default: $HTD_USERNAME.)").Envar("HTD_USERNAME").Short('u').String()
 	password := app.Flag("password",
 		"Your NUSNET password. (default: $HTD_PASSWORD)").Envar("HTD_PASSWORD").Short('p').String()
 
-	declare := app.Command("declare", "Declare your temperature.").Alias("d")
+	declare := app.Command("declare", "Declare your health status.").Alias("d")
 	morningOrAfternoon := declare.Arg("am or pm",
 		"whether the declaration is for the morning or the afternoon").Required().Enum(am, pm)
 	hasSymptoms := declare.Flag("has-symptoms",
