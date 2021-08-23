@@ -23,8 +23,6 @@ func main() {
 	declare := app.Command("declare", "Declare your temperature.").Alias("d")
 	morningOrAfternoon := declare.Arg("am or pm",
 		"whether the declaration is for the morning or the afternoon").Required().Enum(am, pm)
-	temperature := declare.Arg("temperature",
-		"Your temperature").Required().Float32()
 	hasSymptoms := declare.Flag("has-symptoms",
 		"Whether you have COVID-19 symptoms").Bool()
 	familyHasSymptoms := declare.Flag("family-has-symptoms",
@@ -47,7 +45,7 @@ func main() {
 
 	switch command {
 	case declare.FullCommand():
-		makeDeclaration(*username, *password, *morningOrAfternoon, *temperature, *hasSymptoms, *familyHasSymptoms, *declareAnomaly)
+		makeDeclaration(*username, *password, *morningOrAfternoon, *hasSymptoms, *familyHasSymptoms, *declareAnomaly)
 		if *viewAfterDeclare {
 			printPastDeclarations(*username, *password)
 		}
@@ -58,7 +56,6 @@ func main() {
 
 func makeDeclaration(
 	username, password, amOrPm string,
-	temperature float32,
 	hasSymptoms,
 	familyHasSymptoms,
 	declareAnomaly bool,
@@ -72,13 +69,6 @@ func makeDeclaration(
 		printErrorMsgAndExit("Unexpected error")
 	}
 
-	if temperature < 35.0 {
-		printErrorMsgAndExit("Temperature too low. Check your thermometer.")
-	}
-	if temperature >= 37.5 && !declareAnomaly {
-		printErrorMsgAndExit("Your have a fever; not declaring. Pass -f to override.")
-	}
-
 	if hasSymptoms && !declareAnomaly {
 		printErrorMsgAndExit("Your have symptoms; not declaring. Pass -f to override.")
 	}
@@ -87,7 +77,7 @@ func makeDeclaration(
 		printErrorMsgAndExit("Someone in your family has symptoms; not declaring. Pass -f to override.")
 	}
 
-	err := htd.Declare(username, password, time.Now(), isMorning, temperature, hasSymptoms, familyHasSymptoms)
+	err := htd.Declare(username, password, time.Now(), isMorning, hasSymptoms, familyHasSymptoms)
 	exitIfError(err)
 }
 

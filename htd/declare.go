@@ -2,7 +2,6 @@ package htd
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -17,7 +16,6 @@ func Declare(
 	password string,
 	date time.Time,
 	isMorning bool,
-	temperature float32,
 	hasSymptoms bool,
 	familyHasSymptoms bool,
 ) error {
@@ -52,7 +50,6 @@ func Declare(
 		"webdriverFlag":      {""},
 		"tempDeclOn":         {formattedDate},
 		"declFrequency":      {declFrequency},
-		"temperature":        {fmt.Sprintf("%.1f", temperature)},
 		"symptomsFlag":       {symptomsFlag},
 		"familySymptomsFlag": {familySymptomsFlag},
 	}
@@ -73,7 +70,7 @@ func Declare(
 		log.Printf("Temperature declaration failed.\nReceived %q\n", dump)
 		return errors.New("failed to submit temperature")
 	}
-	log.Printf("Successfully made a new declaration for %s %s.\nTemperature: %.1f\nSymptoms: %s\n",
-		declFrequency, formattedDate, temperature, symptomsFlag)
+	log.Printf("Successfully made a new declaration for %s %s.\nSymptoms: %s\nHousehold symptoms: %s\n",
+		declFrequency, formattedDate, symptomsFlag, familySymptomsFlag)
 	return nil
 }

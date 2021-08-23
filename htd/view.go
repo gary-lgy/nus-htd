@@ -12,14 +12,13 @@ import (
 )
 
 type declarationData struct {
-	temperature          string
 	hasSymptoms          string
 	householdHasSymptoms string
 }
 
 func (d *declarationData) String() string {
 	// 36.7  No   No
-	return fmt.Sprintf("%-4s  %-3s  %-3s", d.temperature, d.hasSymptoms, d.householdHasSymptoms)
+	return fmt.Sprintf("%-3s  %-3s", d.hasSymptoms, d.householdHasSymptoms)
 }
 
 type dailyDeclaration struct {
@@ -98,8 +97,8 @@ func getDeclarations(table *goquery.Selection) []*dailyDeclaration {
 func parseDailyDeclaration(row *goquery.Selection) *dailyDeclaration {
 	cells := row.Find("td")
 	date := parseDate(cells.Eq(1))
-	morningData := parseDeclarationData(cells.Slice(2, 5))
-	afternoonData := parseDeclarationData(cells.Slice(5, 8))
+	morningData := parseDeclarationData(cells.Slice(2, 4))
+	afternoonData := parseDeclarationData(cells.Slice(4, 6))
 	return &dailyDeclaration{
 		date:          date,
 		morningData:   morningData,
@@ -119,12 +118,10 @@ func parseDate(cell *goquery.Selection) string {
 }
 
 func parseDeclarationData(cells *goquery.Selection) *declarationData {
-	temperatureText := strings.TrimSpace(cells.Eq(0).Text())
 	symptomsText := strings.TrimSpace(cells.Eq(1).Text())
 	householdSymptomsText := strings.TrimSpace(cells.Eq(2).Text())
 
 	return &declarationData{
-		temperature:          temperatureText,
 		hasSymptoms:          symptomsText,
 		householdHasSymptoms: householdSymptomsText,
 	}
